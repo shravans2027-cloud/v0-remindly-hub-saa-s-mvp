@@ -1,3 +1,7 @@
+exclude:
+  - secret-folder
+  - private
+
 "use client"
 
 import type React from "react"
