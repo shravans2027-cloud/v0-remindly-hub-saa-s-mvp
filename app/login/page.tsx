@@ -1,25 +1,45 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Bell } from "lucide-react"
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" })
+  const [loading, setLoading] = useState(false)
+
+  const router = useRouter()
+  const supabase = createClientComponentClient()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Login attempt:", formData)
-    alert("Welcome back! Redirecting to dashboard...")
+    setLoading(true)
+
+    const { email, password } = formData
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      alert("Invalid login: " + error.message)
+      setLoading(false)
+      return
+    }
+
+    // 🎉 SUCCESS — redirect to dashboard
+    router.push("/dashboard")
   }
 
   return (
@@ -63,18 +83,8 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="rounded" />
-                Remember me
-              </label>
-              <Link href="#" className="text-primary hover:underline">
-                Forgot password?
-              </Link>
-            </div>
-
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 
